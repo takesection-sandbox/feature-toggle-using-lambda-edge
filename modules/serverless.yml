@@ -1,0 +1,64 @@
+service: lambda-edge-2-func
+
+provider:
+  name: aws
+  runtime: nodejs12.x
+  role: LambdaRole
+  stage: ${opt:stage}
+  region: us-east-1
+  lambdaHashingVersion: 20201221
+
+custom:
+  prune:
+    automatic: true
+    number: 3
+
+plugins:
+  - serverless-webpack
+  - serverless-lambda-edge-pre-existing-cloudfront
+  - serverless-prune-plugin
+
+package:
+  exclude:
+    - node_modules/**
+
+functions:
+  viewerRequest:
+    handler: index.handler
+    memorySize: 128
+    timeout: 5
+    events:
+      - preExistingCloudFront:
+          distributionId: ${cf:lambda-edge-2-cloudfront-${opt:stage}.distributionId}
+          eventType: viewer-request
+          pathPattern: '*'
+          includeBody: false
+
+resources:
+  Resources:
+    LambdaRole:
+      Type: AWS::IAM::Role
+      Properties:
+        Path: /
+        RoleName: example-lambda-at-edge-${opt:stage}
+        AssumeRolePolicyDocument:
+          Version: "2012-10-17"
+          Statement:
+            - Effect: Allow
+              Principal:
+                Service:
+                  - edgelambda.amazonaws.com
+                  - lambda.amazonaws.com
+              Action: sts:AssumeRole
+        ManagedPolicyArns:
+          - arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole
+          - arn:aws:iam::aws:policy/AWSXrayWriteOnlyAccess
+        Policies:
+          - PolicyDocument:
+              Version: "2012-10-17"
+              Statement:
+                - Effect: Allow
+                  Action:
+                    - s3:GetObject
+                  Resource: '*'
+            PolicyName: ${self:service}-${opt:stage}

@@ -1,0 +1,15 @@
+{
+  "name": "lambda-edge-2-s3",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Shigeki Shoji",
+  "license": "MIT",
+  "devDependencies": {
+    "serverless": "^2.23.0",
+    "serverless-s3-sync": "^1.15.0"
+  }
+}

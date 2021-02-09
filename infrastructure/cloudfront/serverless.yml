@@ -1,0 +1,98 @@
+service: lambda-edge-2-cloudfront
+
+provider:
+  name: aws
+  stage: ${opt:stage}
+  region: us-east-1
+  lambdaHashingVersion: 20201221
+
+resources:
+  Resources:
+    CachePolicy:
+      Type: AWS::CloudFront::CachePolicy
+      Properties:
+        CachePolicyConfig:
+          DefaultTTL: 86400
+          MaxTTL: 31536000
+          MinTTL: 0
+          Name: ${self:service}-cache-policy-${opt:stage}
+          ParametersInCacheKeyAndForwardedToOrigin:
+            CookiesConfig:
+              CookieBehavior: none
+            EnableAcceptEncodingBrotli: true
+            EnableAcceptEncodingGzip: true
+            HeadersConfig:
+              HeaderBehavior: whitelist
+              Headers:
+                - Authorization
+            QueryStringsConfig:
+              QueryStringBehavior: all
+    OriginRequestPolicy:
+      Type: AWS::CloudFront::OriginRequestPolicy
+      Properties:
+        OriginRequestPolicyConfig:
+          CookiesConfig:
+            CookieBehavior: none
+          HeadersConfig:
+            HeaderBehavior: none
+          Name: ${self:service}-reqpolicy-${opt:stage}
+          QueryStringsConfig:
+            QueryStringBehavior: all
+    Distribution:
+      Type: AWS::CloudFront::Distribution
+      Properties:
+        DistributionConfig:
+          CacheBehaviors:
+            - AllowedMethods:
+                - GET
+                - HEAD
+              CachedMethods:
+                - GET
+                - HEAD
+              CachePolicyId:
+                Ref: CachePolicy
+              Compress: true
+              OriginRequestPolicyId:
+                Ref: OriginRequestPolicy
+              PathPattern: 'sub/*'
+              TargetOriginId: SubOrigin
+              ViewerProtocolPolicy: redirect-to-https
+          DefaultCacheBehavior:
+            AllowedMethods:
+              - GET
+              - HEAD
+            CachedMethods:
+              - GET
+              - HEAD
+            CachePolicyId:
+              Ref: CachePolicy
+            Compress: true
+            OriginRequestPolicyId:
+              Ref: OriginRequestPolicy
+            TargetOriginId: DefaultOrigin
+            ViewerProtocolPolicy: redirect-to-https
+          DefaultRootObject: index.html
+          Enabled: true
+          HttpVersion: http2
+          IPV6Enabled: false
+          Origins:
+            - DomainName: ${opt:defaultbucket}.s3-ap-northeast-1.amazonaws.com
+              Id: DefaultOrigin
+              S3OriginConfig:
+                OriginAccessIdentity:
+                  Fn::Join:
+                    - '/'
+                    - - 'origin-access-identity/cloudfront'
+                      - ${opt:oai}
+            - DomainName: ${opt:subbucket}.s3-ap-northeast-1.amazonaws.com
+              Id: SubOrigin
+              S3OriginConfig:
+                OriginAccessIdentity:
+                  Fn::Join:
+                    - '/'
+                    - - 'origin-access-identity/cloudfront'
+                      - ${opt:oai}
+  Outputs:
+    distributionId:
+      Value:
+        Ref: Distribution
