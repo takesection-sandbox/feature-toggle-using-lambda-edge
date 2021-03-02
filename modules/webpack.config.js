@@ -5,6 +5,11 @@ const slsw = require('serverless-webpack');
 module.exports = {
     mode: slsw.lib.webpack.isLocal ? 'development' : 'production',
     entry: slsw.lib.entries,
+    plugins: [
+        new webpack.DefinePlugin({
+            PASS_LIST: JSON.stringify(slsw.lib.serverless['configurationInput']['custom']['passList'])
+        })
+    ],
     resolve: {
         extensions: ['.js', '.jsx', '.json', '.ts', '.tsx'],
     },

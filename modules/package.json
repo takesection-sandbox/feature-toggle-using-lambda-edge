@@ -4,7 +4,8 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "deploy": "serverless deploy -s test -v",
+    "remove": "serverless remove -s test -v"
   },
   "author": "Shigeki Shoji",
   "license": "MIT",

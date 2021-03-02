@@ -12,11 +12,15 @@ custom:
   prune:
     automatic: true
     number: 3
+  passList:
+    - "/foo"
+    - "/bar"
+    - "/baz"
 
 plugins:
   - serverless-webpack
-  - serverless-lambda-edge-pre-existing-cloudfront
   - serverless-prune-plugin
+# - serverless-lambda-edge-pre-existing-cloudfront
 
 package:
   exclude:
@@ -27,12 +31,12 @@ functions:
     handler: index.handler
     memorySize: 128
     timeout: 5
-    events:
-      - preExistingCloudFront:
-          distributionId: ${cf:lambda-edge-2-cloudfront-${opt:stage}.distributionId}
-          eventType: viewer-request
-          pathPattern: '*'
-          includeBody: false
+#   events:
+#     - preExistingCloudFront:
+#         distributionId: ${cf:lambda-edge-2-cloudfront-${opt:stage}.distributionId}
+#         eventType: viewer-request
+#         pathPattern: '*'
+#         includeBody: false
 
 resources:
   Resources:
